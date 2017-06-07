@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HTMLWidget name="Expanding Rectangle" formatNumber="3"
+      localization="none" creator="Michael Trittin"
+      defaultWidth="200" defaultHeight="5"
+      isResizable="true">
+  <parameters>
+    <color name="color" label="Rectangle Color" defaultValue="#ffffff"/>
+    <separator/>
+    <number name="normalWidth" defaultValue="200" label="Normal Width" min="1" step="1" max="1000"/>
+    <number name="normalHeight" defaultValue="5" label="Normal Height" min="1" step="1" max="1000"/>
+    <separator/>
+    <number name="rolloverWidth" defaultValue="250" label="Rollover Width" min="1" step="1" max="1000"/>
+    <number name="rolloverHeight" defaultValue="5" label="Rollover Height" min="1" step="1" max="1000"/>
+    <builtIn name="itemUID"/>
+  </parameters>
+  
+  <headHTML>
+    <![CDATA[
+    <style>
+      #rectangle{param_itemUID} {
+        width: {param_normalWidth}px;
+        height: {param_normalHeight}px;
+        background: #{param_color};
+        transition: width .4s;
+        -webkit-transition: width .4s;
+      }
+      .rectangleParent{param_itemUID}:hover #rectangle{param_itemUID} {
+        width: {param_rolloverWidth}px;
+        height: {param_rolloverHeight}px;
+      }
+    </style>
+    ]]>
+  </headHTML>
+  <documentReadyJS>
+    <![CDATA[
+    try {
+      function getButton(child) {
+        current = child;
+        while (current != null) {
+          if (current.className.indexOf("Button") != -1) {
+            return document.getElementById(current.id);
+          }
+          current = current.parentElement;
+        }
+      }
+      parent = getButton(document.getElementById("rectangle{param_itemUID}"));
+      parent.className += " rectangleParent{param_itemUID}";
+    } catch(err) {
+      console.log("Something went wrong!");
+    }
+    ]]>
+  </documentReadyJS>
+  <pageItemHTML>
+    <![CDATA[
+      <div id="rectangle{param_itemUID}"></div>
+    ]]>
+  </pageItemHTML>
+
+</HTMLWidget>
