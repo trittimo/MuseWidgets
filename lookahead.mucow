@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HTMLWidget name="Lookahead" formatNumber="4"
+      localization="none" creator="Michael Trittin"
+      defaultWidth="50" defaultHeight="50"
+      isResizable="false">
+  <parameters>
+    <bool name="hasNextPage" label="Has Next Page" defaultValue="true">
+      <trueVal value="true"/>
+      <falseVal value="false" disableOptions="nextPage"/>
+    </bool>
+    <text name="nextPage" defaultValue="My Next Page" label="Next Page" tooltip="The name of the page to be loaded next (this must be exact)"/>
+    <bool name="hasPrevPage" label="Has Previous Page" defaultValue="true">
+      <trueVal value="true"/>
+      <falseVal value="false" disableOptions="prevPage"/>
+    </bool>
+    <text name="prevPage" defaultValue="None" label="Prev Page" tooltip="The name of the page that was previous (this must be exact)"/>
+    <builtIn name="pageTitle"/>
+  </parameters>
+  <headHTML>
+    <![CDATA[[
+    <meta name="lookaheadData" content="{'hasNextPage':{param_hasNextPage},'nextPage':'{param_nextPage}','hasPrevPage':{param_hasPrevPage},'prevPage':'{param_prevPage}','pageTitle':'{param_pageTitle}'}"/>
+    ]]>
+  </headHTML>
+  <bodyEndHTML>
+    <![CDATA[[]]
+    <script type="text/javascript">
+    (function() {
+      // Constants
+      var addressPostfix = ".html";
+      var debug = true;
+
+      function log(value) {
+        if (debug) {
+          console.log(value);
+        }
+      }
+
+      // Namespace
+      if (!window.lookahead) {
+        window.lookahead = {};
+      }
+
+      // Stores a value in the global cache
+      lookahead.cache = function(name, value) {
+        if (!lookahead._cache) {
+          lookahead._cache = {};
+        }
+        lookahead._cache[name] = value;
+      }
+
+      // Returns the value stored in the global cache
+      lookahead.getCached = function(name) {
+        if (!lookahead._cache) {
+          lookahead._cache = {};
+        }
+
+        return lookahead._cache[name];
+      }
+
+      // Converts a title into an addressable name
+      // (i.e. Hello World becomes http://www.the-site.com/location/hello-world.html)
+      lookahead.titleToName = function(title) {
+        var name = title.replace(/ /g, "-");
+        name = name.toLowerCase();
+        name = name + addressPostfix;
+        var href = document.location.href;
+        return href.substring(0, href.lastIndexOf("/") + 1) + name;
+      }
+
+      // Replaces the current page with the requested page
+      lookahead.replacePage = function(title) {
+        var name = lookahead.titleToName(title);
+        log("Replacing the current page with " + name);
+        if (lookahead.getCached(name)) {
+          document.open("test/html");
+          document.write(lookahead.getCached(name));
+          document.close();
+          return true;
+        } else {
+          log("Error loading the page: " + name);
+        }
+        return false;
+      }
+
+      // Loads lookahead metadata from the webpage
+      lookahead.meta = function(key) {
+        var meta = document.querySelectorAll("meta[name='lookaheadData']");
+        if (meta.length != 0) {
+          return JSON.parse(meta[0].getAttribute("content").replace(/\'/g, '"'))[key];
+        }
+        return false;
+      }
+
+      // Loads the next page
+      lookahead.next = function() {
+        if (lookahead.meta("hasNextPage")) {
+          log("Loading the next page");
+          var next = lookahead.meta("nextPage");
+          lookahead.replacePage(next);
+          lookahead.init();
+        } else {
+          log("No next page to load");
+        }
+      }
+
+      // Loads the previous page
+      lookahead.prev = function() {
+        if (lookahead.meta("hasPrevPage")) {
+          log("Loading the previous page");
+          var prev = lookahead.meta("prevPage");
+          lookahead.replacePage(prev);
+          lookahead.init();
+        } else {
+          log("No previous page to load");
+        }
+      }
+
+      // Requests the webpage and returns it or false if nothing could be loaded
+      lookahead.request = function(address) {
+        var request = new XMLHttpRequest();
+        request.open('GET', address, true);
+        request.onload = function() {
+          if (request.status >= 200 && request.status < 400) {
+            lookahead.cache(address, request.responseText);
+            console.log("Saved " + address + " to cache");
+          } else {
+            log("Encountered an error requesting the page: " + addr);
+          }
+        }
+
+        request.onerror = function() {
+          log("Encountered an error requesting the page: " + addr);
+        }
+
+        request.send();
+        return false;
+      }
+
+      // Sets up the page for lookahead functionality
+      lookahead.init = function() {
+        log("Initializing lookahead");
+        var pages = [["hasNextPage", "nextPage"], ["hasPrevPage", "prevPage"]];
+        for (var i = 0; i < pages.length; i++) {
+          if (lookahead.meta(pages[i][0])) {
+            var addr = lookahead.titleToName(lookahead.meta(pages[i][1]));
+            log("Requesting page " + addr);
+            var content = lookahead.request(addr);
+          } else {
+            log("No page to load for " + pages[i][1]);
+          }
+        }
+
+      }
+    })();
+    </script>
+    ]]>
+  </bodyEndHTML>
+  <documentReadyJS>
+    <![CDATA[
+      (function() {
+        window.lookahead.init();
+      })();
+    ]]>
+  </documentReadyJS>
+</HTMLWidget>
