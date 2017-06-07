@@ -1,0 +1,6 @@
+Expanding-Rectangle Widget
+This widget is a simple rectangle that expands on mouseover. It must be placed somewhere
+inside of a state button: the first parent state button it encounters will be the button
+that gives the element interactivity. For example, if there is a 100x100 pixel state
+button that contains a 50x50 state button which in turn contains this widget, the widget
+will only expand when you hover over the 50x50 state button.

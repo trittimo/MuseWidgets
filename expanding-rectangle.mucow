@@ -44,9 +44,14 @@
         }
       }
       parent = getButton(document.getElementById("rectangle{param_itemUID}"));
-      parent.className += " rectangleParent{param_itemUID}";
+      if (parent == null) {
+        console.log("Unable to find a parent state button!");
+      } else {
+        parent.className += " rectangleParent{param_itemUID}";
+      }
     } catch(err) {
-      console.log("Something went wrong!");
+      console.log("Something went wrong with the expanding rectangle widget!");
+      console.log(err.message);
     }
     ]]>
   </documentReadyJS>
